@@ -14,21 +14,13 @@ export class LoginPage {
   }
 
   async login(username: string, password: string) {
-    await this.page.waitForLoadState("domcontentloaded");
-
     const inputs = this.page.locator("input");
 
-    await inputs.nth(0).click({ force: true });
-    await inputs.nth(0).fill(username, { force: true });
-
-    await inputs.nth(1).click({ force: true });
-    await inputs.nth(1).fill(password, { force: true });
-
-    await this.page
-      .getByRole("button", { name: /log in/i })
-      .click({ force: true });
+    await inputs.nth(0).fill(username);
+    await inputs.nth(1).fill(password);
+    this.page.getByRole("button", { name: /log in/i }).click();
   }
   async expectDashboard() {
-    await expect(this.page).toHaveURL(/admin/);
+    await expect(this.page).toHaveURL(/\/admin$/);
   }
 }
