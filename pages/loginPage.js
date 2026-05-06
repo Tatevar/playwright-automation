@@ -1,17 +1,16 @@
-import { expect } from "@playwright/test";
-
 export class LoginPage {
+  /**
+   * @param {import("@playwright/test").Page} page
+   */
   constructor(page) {
     this.page = page;
-    this.emailInput = page.locator("input").nth(0);
-    this.passwordInput = page.locator("input").nth(1);
+    this.emailInput = page.locator('input[type="text"]');
+    this.passwordInput = page.locator('input[type="password"]');
     this.loginButton = page.getByRole("button", { name: /log in/i });
   }
 
   async goto() {
-    await this.page.goto(
-      "https://dev-dubaicorp-front.scribex.io/admin/sign-in",
-    );
+    await this.page.goto("/admin/sign-in");
   }
 
   async login(username, password) {

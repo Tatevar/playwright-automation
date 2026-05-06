@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { LoginPage } from "../pages/loginPage";
-import { MainPage } from "../pages/mainPage";
+import { LoginPage } from "../pages/loginPage.js";
+import { MainPage } from "../pages/mainPage.js";
 
 //test- 1
 test("user can login", async ({ page }) => {
@@ -14,7 +14,7 @@ test("user can login", async ({ page }) => {
 test("user can logout", async ({ page }) => {
   const mainPage = new MainPage(page);
 
-  await page.goto("https://dev-dubaicorp-front.scribex.io/admin");
+  await page.goto("/admin");
   await mainPage.expectDashboard();
 
   await mainPage.openMenu();
