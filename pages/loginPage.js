@@ -19,8 +19,4 @@ export class LoginPage {
     await this.passwordInput.fill(password);
     await this.loginButton.click();
   }
-
-  async expectDashboard() {
-    await expect(this.page).toHaveURL(/\/admin$/);
-  }
 }

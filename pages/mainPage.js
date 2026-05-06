@@ -1,8 +1,10 @@
+import { expect } from "@playwright/test";
+
 export class MainPage {
   constructor(page) {
     this.page = page;
-    this.menuButton = page.locator('div[style*="cursor: pointer"]');
-    this.logoutItem = page.locator('ul >> li:has-text("Log Out")');
+    this.menuButton = page.locator(".ant-col-2 div").first();
+    this.logoutItem = page.locator('li:has-text("Log Out")');
   }
 
   async openMenu() {
@@ -12,5 +14,9 @@ export class MainPage {
   async logout() {
     await this.logoutItem.waitFor({ state: "visible" });
     await this.logoutItem.click();
+  }
+
+  async expectDashboard() {
+    await expect(this.page).toHaveURL(/\/admin$/);
   }
 }
