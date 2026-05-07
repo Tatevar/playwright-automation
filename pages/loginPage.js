@@ -1,12 +1,6 @@
 export class LoginPage {
-  /**
-   * @param {import("@playwright/test").Page} page
-   */
   constructor(page) {
     this.page = page;
-    this.emailInput = page.locator('input[type="text"]');
-    this.passwordInput = page.locator('input[type="password"]');
-    this.loginButton = page.getByRole("button", { name: /log in/i });
   }
 
   async goto() {
@@ -14,8 +8,8 @@ export class LoginPage {
   }
 
   async login(username, password) {
-    await this.emailInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.loginButton.click();
+    await this.page.locator('input[type="text"]').fill(username);
+    await this.page.locator('input[type="password"]').fill(password);
+    await this.page.getByRole("button", { name: /log in/i }).click();
   }
 }
