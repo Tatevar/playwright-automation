@@ -2,27 +2,39 @@
 
 End-to-end automation suite for the Scribex DubaiCorp admin application using Playwright Test.
 
-The tests cover admin sign-in/sign-out flows and Company Set Up question creation using a page-object structure.
+The suite covers admin sign-in/sign-out flows and Company Set Up question creation using a page-object structure. It can run directly with Node.js or inside Docker, and CI runs the Dockerized test workflow in GitHub Actions.
 
 ## Tech Stack
 
 - Node.js
 - Playwright Test
 - JavaScript ES modules
-- GitHub Actions for CI
+- Docker
+- GitHub Actions
 
 ## Requirements
 
-- Node.js LTS
-- npm
-- Playwright browser binaries
+- Node.js LTS and npm for local runs
+- Docker for containerized runs
 - Access to the configured test environment:
 
 ```text
 https://dev-dubaicorp-front.scribex.io
 ```
 
-## Setup
+## Environment
+
+Tests use environment variables for the target URL and login credentials:
+
+```text
+PLAYWRIGHT_BASE_URL=https://dev-dubaicorp-front.scribex.io
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+```
+
+Use `.env.example` as the local template for Docker Compose. For direct `npm` runs, export the variables in your shell before running tests.
+
+## Local Setup
 
 Install dependencies:
 
@@ -30,10 +42,45 @@ Install dependencies:
 npm ci
 ```
 
-Install Playwright browsers:
+Install Playwright browsers for direct local runs:
 
 ```bash
-npx playwright install
+npm run playwright:install
+```
+
+Run the full suite:
+
+```bash
+npm test
+```
+
+Run tests in headed mode:
+
+```bash
+npm run test:headed
+```
+
+Open the HTML report:
+
+```bash
+npm run test:report
+```
+
+## Docker
+
+The project uses the official Playwright Docker image in `Dockerfile`. The image installs npm dependencies with `npm ci`, copies the test suite, and runs `npm test`.
+
+Build and run through Docker Compose:
+
+```bash
+npm run test:docker
+```
+
+Compose passes `PLAYWRIGHT_BASE_URL`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` into the container and mounts these artifact directories back to the host:
+
+```text
+playwright-report/
+test-results/
 ```
 
 ## Authentication State
@@ -44,70 +91,38 @@ Authenticated tests use a saved browser storage state at:
 playwright/.auth/user.json
 ```
 
-That file is intentionally ignored by git. A fresh clone needs a valid auth state before tests that visit `/admin` can run successfully.
+The setup project creates that file at runtime by logging in with `ADMIN_EMAIL` and `ADMIN_PASSWORD`. The auth state is intentionally ignored by git.
 
-The repository includes `e2e/auth.setup.js` as the login helper used to create that state. Keep real credentials out of committed code and prefer environment variables or a local-only setup when sharing this project.
+## GitHub Actions
 
-## Running Tests
+`.github/workflows/playwright.yml` runs on pushes, pull requests, and manual dispatches.
 
-Run the full test suite:
+The workflow:
 
-```bash
-npx playwright test
-```
+1. Checks out the repository.
+2. Validates that `ADMIN_EMAIL` and `ADMIN_PASSWORD` repository secrets are configured.
+3. Builds the Playwright Docker test image.
+4. Runs the suite inside Docker.
+5. Uploads `playwright-report/` and `test-results/` as artifacts.
 
-Run a single spec file:
-
-```bash
-npx playwright test e2e/login.spec.js
-```
-
-Run tests in headed mode:
-
-```bash
-npx playwright test --headed
-```
-
-Run tests with Playwright Inspector:
-
-```bash
-npx playwright test --debug
-```
-
-List discovered tests:
-
-```bash
-npx playwright test --list
-```
-
-## Reports
-
-The project uses the Playwright HTML reporter. After a test run, open the report with:
-
-```bash
-npx playwright show-report
-```
-
-Reports are written to:
+Configure these repository settings before relying on CI:
 
 ```text
-playwright-report/
+Secrets:
+ADMIN_EMAIL
+ADMIN_PASSWORD
+
+Optional repository variable:
+PLAYWRIGHT_BASE_URL
 ```
 
-## Visual Snapshots
-
-`e2e/login.spec.js` includes a visual snapshot assertion. When a visual change is intentional, update snapshots with:
-
-```bash
-npx playwright test --update-snapshots
-```
-
-Review snapshot changes carefully before committing them.
+If `PLAYWRIGHT_BASE_URL` is not set, CI defaults to `https://dev-dubaicorp-front.scribex.io`.
 
 ## Project Structure
 
 ```text
 .
+|-- .github/workflows/playwright.yml
 |-- e2e/
 |   |-- auth.setup.js
 |   |-- companySetupQuestions.spec.js
@@ -117,45 +132,22 @@ Review snapshot changes carefully before committing them.
 |   |-- loginPage.js
 |   `-- mainPage.js
 |-- utils/
-|   `-- dataHelper.js
+|   |-- dataHelper.js
+|   `-- env.js
+|-- Dockerfile
+|-- docker-compose.yml
 |-- playwright.config.js
-|-- package.json
-`-- .github/workflows/playwright.yml
+`-- package.json
 ```
-
-## Page Objects
-
-Page objects live in `pages/` and keep selectors plus reusable page actions out of the test files.
-
-- `LoginPage` handles navigation to the sign-in screen and login actions.
-- `MainPage` covers dashboard expectations, menu opening, and logout.
-- `CompanySetupQuestionsPage` covers question creation and publishing.
-
-## CI
-
-GitHub Actions runs Playwright tests on pushes and pull requests targeting `main` or `master`.
-
-The workflow:
-
-1. Checks out the repository.
-2. Sets up Node.js LTS.
-3. Installs dependencies with `npm ci`.
-4. Installs Playwright browsers.
-5. Runs `npx playwright test`.
-6. Uploads the Playwright HTML report as an artifact.
 
 ## Troubleshooting
 
-If tests fail because `playwright/.auth/user.json` is missing, create or restore a valid local auth state before rerunning authenticated tests.
+If tests fail because credentials are missing, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` locally or add them as GitHub repository secrets.
 
-If browsers are missing, run:
-
-```bash
-npx playwright install
-```
-
-If a visual snapshot test fails after an expected UI change, update and review the snapshot:
+If browsers are missing during a direct local run, run:
 
 ```bash
-npx playwright test --update-snapshots
+npm run playwright:install
 ```
+
+If Docker artifacts are empty after a failed run, check the GitHub Actions log or local Docker output first; Playwright only writes the HTML report after the test process starts.

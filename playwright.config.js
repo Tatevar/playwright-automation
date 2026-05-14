@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { authFile, baseURL } from "./utils/env.js";
 
 /**
  * Read environment variables from file.
@@ -12,11 +13,6 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  use: {
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-  },
   testDir: "./e2e",
   /* The tests share one login account, so keep file tests sequential. */
   fullyParallel: false,
@@ -26,14 +22,18 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: process.env.CI
+    ? [["github"], ["html", { outputFolder: "playwright-report", open: "never" }]]
+    : [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'https://dev-dubaicorp-front.scribex.io',
+    baseURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
 
   /* Configure projects for major browsers */
@@ -49,7 +49,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         // Use prepared auth state.
-        storageState: 'playwright/.auth/user.json',
+        storageState: authFile,
       },
     },
 
